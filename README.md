@@ -60,3 +60,16 @@ Fail classes:
 - `budget_exceeded`
 - `db_error`
 - `unknown`
+
+## GitHub 初期化リポジトリが空に見える場合
+GitHub で `Initialize this repository` を選んだ直後にファイルが空の場合は、
+まだこのブランチの内容がデフォルトブランチへ反映されていない状態です。
+以下を実行して反映してください。
+
+```bash
+git remote add origin <YOUR_GITHUB_REPO_URL>
+git push -u origin work
+# その後、GitHubで work -> main のPRを作成してマージ
+```
+
+`main` にマージされると、GitHub 上のリポジトリ一覧にも本プロジェクト一式が表示されます。
