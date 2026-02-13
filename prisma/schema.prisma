@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String        @id @default(cuid())
+  anonKey    String        @unique
+  createdAt  DateTime      @default(now())
+  sessions   Session[]
+  documents  PDLDocument[]
+  executions ExecutionLog[]
+  feedbacks  Feedback[]
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  csrfToken  String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PDLDocument {
+  id         String       @id @default(cuid())
+  userId     String
+  title      String
+  sourceText String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  compiles   PDLCompile[]
+
+  @@index([userId])
+}
+
+model PDLCompile {
+  id           String      @id @default(cuid())
+  documentId    String
+  userId        String
+  constraints   Json
+  compileStatus String
+  createdAt     DateTime    @default(now())
+  document      PDLDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedbacks     Feedback[]
+
+  @@index([documentId])
+  @@index([userId])
+}
+
+model ExecutionLog {
+  id              String   @id @default(cuid())
+  executionId     String   @unique
+  route           String
+  userIdAnon      String
+  failClass       String
+  ok              Boolean
+  userSafeMessage String
+  requestJson     Json?
+  responseJson    Json?
+  createdAt       DateTime @default(now())
+  user            User?    @relation(fields: [userIdAnon], references: [id], onDelete: SetNull)
+
+  @@index([route])
+  @@index([createdAt])
+}
+
+model Feedback {
+  id          String   @id @default(cuid())
+  executionId String
+  compileId   String?
+  userId      String
+  screenId    String
+  freeText    String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  compile     PDLCompile? @relation(fields: [compileId], references: [id], onDelete: SetNull)
+
+  @@index([executionId])
+  @@index([userId])
+}
